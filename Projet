@@ -1,0 +1,108 @@
+/*******************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <iostream>
+#include <termios.h>
+#include <fcntl.h>
+using namespace std;
+
+/* retourne 0 si aucune touche n'est appuyée, 
+ * sinon retourne le code ASCII de la touche */
+  int read_keybord();
+
+/******************************/
+
+#define H 20
+#define L 40
+
+char screen[H][L];
+
+void screen_display(){
+  system("clear");
+  for(int i=0;i<H; i++) {
+    for (int j=0; j<L; j++) {
+      cout << screen [i][j];
+    }
+    cout << endl;
+  }
+}
+
+/******************************/
+
+void clear_screen() {
+  for(int i=0;i<H; i++){ 
+    for (int j=0; j<L; j++){
+      if (i==0 || i==H-1 || j==0 || j==L-1)
+	screen[i][j]= '*';
+      else
+	screen[i][j]= ' ';
+    }
+  }
+}
+
+/******************************/
+
+double x = 0.0;
+double y = 0.0; 
+
+void update_game(){
+  screen[(int)x][(int)y] ='o';
+  x=x+0.5;
+  y=y+0.5; 
+}
+
+/******************************/
+/* Mettre votre code source ici */
+
+int main(){
+  int key;
+  do{
+    key = read_keybord();	
+    clear_screen();		
+    update_game();				
+    screen_display();
+    usleep(10 * 10000);	
+  } 
+  while(key != 'q');
+}
+
+/******************************/
+
+int kbhit(void)
+{
+  struct termios oldt, newt;
+  int ch;
+  int oldf;
+
+  tcgetattr(STDIN_FILENO, &oldt);
+  newt = oldt;
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+  oldf = fcntl(STDIN_FILENO, F_GETFL, 0);
+  fcntl(STDIN_FILENO, F_SETFL, oldf | O_NONBLOCK);
+
+  ch = getchar();
+
+  tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+  fcntl(STDIN_FILENO, F_SETFL, oldf);
+
+  if(ch != EOF)
+  {
+    ungetc(ch, stdin);
+    return 1;
+  }
+
+  return 0;
+}
+
+int read_keybord() {
+  int key;
+  if (kbhit())
+    key = getc(stdin);
+  else
+    key = 0;
+  return key;
+}
+
+/******************************/
